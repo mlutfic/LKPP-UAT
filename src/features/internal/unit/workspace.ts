@@ -390,7 +390,7 @@ export function isUnitTransferredEscalationRow(row: UnitWorkspaceRow, unitId: st
 }
 
 export function isUnitHandoffRow(row: UnitWorkspaceRow, unitId: string) {
-  return isUnitTransferredEscalationRow(row, unitId);
+  return isUnitOriginEscalationRow(row, unitId);
 }
 
 export function decorateUnitRowsForScope(
