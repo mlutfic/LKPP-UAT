@@ -25,6 +25,7 @@ type LegacyAppointmentRow = {
   counter_id?: number | string | null;
   appointment_date?: string | null;
   start_time?: string | null;
+  updated_at?: string | null;
 };
 
 type LegacyUserRow = {
@@ -230,7 +231,7 @@ export async function GET() {
     const [allAppointments, rawServices, rawUnits] = await Promise.all([
       fetchRestRows<LegacyAppointmentRow>("v_lkpp_appointments_enriched", {
         select:
-          "id,user_id,queue_number,status,checked_in,call_count,service_id,service_name,unit_id,unit_short_name,staff_note,counter_id,appointment_date,start_time",
+          "id,user_id,queue_number,status,checked_in,call_count,service_id,service_name,unit_id,unit_short_name,staff_note,counter_id,appointment_date,start_time,updated_at",
         order: "appointment_date.desc,start_time.desc",
         limit: "500",
       }),
@@ -297,6 +298,7 @@ export async function GET() {
           counter_id: row.counter_id ?? undefined,
           appointment_date: asString(row.appointment_date) || undefined,
           start_time: asString(row.start_time) || undefined,
+          updated_at: asString(row.updated_at) || undefined,
         })),
         users: users.map((row) => ({
           id: asString(row.id),

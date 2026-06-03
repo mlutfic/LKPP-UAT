@@ -108,6 +108,7 @@ function mergeLiveScopedResponses(
 export type LiveStaffAppointment = {
   id: string;
   createdAt?: string;
+  updatedAt?: string;
   userId: string;
   userName: string;
   userNik: string;
@@ -405,6 +406,8 @@ function mapLiveAppointmentsToRows(
         id: asString(appointment.id).trim() || queueNumber,
         createdAt:
           asString(appointment.createdAt || appointment.created_at).trim() || undefined,
+        updatedAt:
+          asString(appointment.updatedAt || appointment.updated_at).trim() || undefined,
         userId,
         userName: userNameById.get(userId) || "Nama tamu belum tersedia",
         userNik: userNikById.get(userId) || "-",

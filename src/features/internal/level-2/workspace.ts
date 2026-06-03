@@ -145,9 +145,48 @@ export function buildFallbackLevel2Rows() {
   return buildFallbackUnitRows(LEVEL2_FALLBACK_ROWS);
 }
 
+function getJakartaDateKeyFromTimestamp(value: string | null | undefined) {
+  const timestamp = Date.parse(String(value || "").trim());
+  if (!Number.isFinite(timestamp)) {
+    return "";
+  }
+
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Jakarta",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+  const parts = formatter.formatToParts(new Date(timestamp));
+  const year = parts.find((part) => part.type === "year")?.value ?? "";
+  const month = parts.find((part) => part.type === "month")?.value ?? "";
+  const day = parts.find((part) => part.type === "day")?.value ?? "";
+
+  return year && month && day ? `${year}-${month}-${day}` : "";
+}
+
+function getJakartaTodayDateKey() {
+  return getJakartaDateKeyFromTimestamp(new Date().toISOString());
+}
+
+function isLevel2CompletedTodayRow(row: UnitWorkspaceRow, todayKey: string) {
+  if (!isUnitCompletedRow(row)) {
+    return false;
+  }
+
+  const updatedDateKey = getJakartaDateKeyFromTimestamp(row.updatedAt);
+  if (updatedDateKey) {
+    return updatedDateKey === todayKey;
+  }
+
+  return row.source === "fallback" && row.date === todayKey;
+}
+
 export function buildLevel2Stats(
   rows: ReturnType<typeof groupUnitRows>,
 ): WorkspaceStat[] {
+  const todayKey = getJakartaTodayDateKey();
+
   return [
     {
       label: "Inbox Aktif",
@@ -171,7 +210,11 @@ export function buildLevel2Stats(
     },
     {
       label: "Selesai",
-      value: String(rows.completedRows.length),
+      value: String(
+        rows.completedRows.filter((row) =>
+          isLevel2CompletedTodayRow(row, todayKey),
+        ).length,
+      ),
       description: "Ditutup hari ini.",
       tone: "success",
     },

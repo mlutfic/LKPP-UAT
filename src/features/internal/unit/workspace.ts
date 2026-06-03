@@ -16,6 +16,7 @@ export type UnitWorkspaceRow = WorkspaceRow & {
   appointmentId?: string;
   displayQueueNumber?: string;
   createdAt?: string;
+  updatedAt?: string;
   serviceId?: string;
   serviceLevel: 1 | 2;
   unitId?: string;
@@ -192,6 +193,7 @@ export function buildLiveUnitRows(
       note: appointment.note,
       appointmentId: appointment.id,
       createdAt: appointment.createdAt,
+      updatedAt: appointment.updatedAt,
       serviceId: appointment.serviceId,
       serviceLevel: appointment.serviceLevel ?? 1,
       unitId: appointment.unitId,
