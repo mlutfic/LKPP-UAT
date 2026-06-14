@@ -24,12 +24,12 @@ export const metadata: Metadata = {
   description: "Portal layanan publik digital LKPP untuk jadwal, antrean, dan informasi layanan.",
   icons: {
     icon: [
-      { url: "/favicon.ico" },
+      { url: "/favicon.ico?v=lkpp-20260614" },
       { url: "/pwa/icon-192.png", type: "image/png", sizes: "192x192" },
       { url: "/pwa/icon-512.png", type: "image/png", sizes: "512x512" },
     ],
     apple: [{ url: "/pwa/apple-touch-icon.png", sizes: "180x180" }],
-    shortcut: ["/favicon.ico"],
+    shortcut: ["/favicon.ico?v=lkpp-20260614"],
   },
 };
 
