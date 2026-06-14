@@ -1,4 +1,4 @@
-const CACHE_NAME = "lkpp-antrian-shell-v2";
+const CACHE_NAME = "lkpp-antrian-shell-v3";
 const PUSH_CALLING_PARAM = "push";
 const PUSH_CALLING_VALUE = "calling";
 const PUSH_CALLING_ID_PARAM = "callingId";
@@ -7,6 +7,7 @@ const PUSH_CALLING_CLIENT_MESSAGE_TYPE = "lkpp-calling-push";
 const STATIC_ASSETS = [
   "/",
   "/favicon.ico",
+  "/favicon.ico?v=lkpp-20260614",
   "/manifest.webmanifest",
   "/brand/logo-lkpp.png",
   "/pwa/icon-192.png",
