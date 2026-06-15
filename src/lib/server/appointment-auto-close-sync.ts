@@ -13,6 +13,7 @@ import {
 } from "@/lib/appointment-auto-close";
 import { getPublicEnv, getServerEnv } from "@/lib/env";
 import { formatQueueNumberForDisplay } from "@/lib/queue-number";
+import { resolvePublicBaseUrl } from "@/lib/server/public-base-url";
 
 type AutoCloseAppointmentRow = {
   id?: string | null;
@@ -48,7 +49,6 @@ type AppointmentAutoCloseSummary = {
   updatedCount: number;
 };
 
-const STABLE_UAT_PUBLIC_URL = "https://lkpp-antrean-uat.vercel.app";
 const APPOINTMENT_FETCH_SELECT =
   "id,user_id,user_email,queue_number,status,appointment_date,start_time,end_time,service_id,service_name,unit_short_name,staff_note,counter_id,auto_cancelled,checked_in";
 const APPOINTMENT_PATCH_SELECT =
@@ -143,20 +143,7 @@ function canSendAutoCloseEmails() {
 }
 
 function getStablePublicEmailBaseUrl() {
-  const appUrl = String(getPublicEnv().appUrl || "").trim().replace(/\/$/, "");
-
-  if (!appUrl) {
-    return STABLE_UAT_PUBLIC_URL;
-  }
-
-  if (
-    /(?:^https?:\/\/)?(?:[^/]+\.)?vercel\.app$/i.test(appUrl) ||
-    /pages\.dev$/i.test(appUrl)
-  ) {
-    return STABLE_UAT_PUBLIC_URL;
-  }
-
-  return appUrl;
+  return resolvePublicBaseUrl();
 }
 
 function buildPublicUrl(pathname: string) {

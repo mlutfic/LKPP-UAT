@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { resolveRequestOrigin } from "@/lib/server/request-origin";
 import { requestRegisterVerification } from "@/lib/server/public-user-auth-email";
 
 export async function POST(request: Request) {
@@ -12,7 +13,9 @@ export async function POST(request: Request) {
   };
 
   try {
-    const result = await requestRegisterVerification(payload);
+    const result = await requestRegisterVerification(payload, {
+      publicBaseUrl: resolveRequestOrigin(request),
+    });
 
     return NextResponse.json({ ok: true, ...result });
   } catch (error) {

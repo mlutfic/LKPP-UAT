@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 
 import { getPublicEnv } from "@/lib/env";
+import { resolveRequestOrigin } from "@/lib/server/request-origin";
 import { requestUserPasswordReset } from "@/lib/server/public-user-auth-email";
 
-async function requestUserPasswordResetViaLegacyBackend(email: string) {
+async function requestUserPasswordResetViaLegacyBackend(email: string, publicBaseUrl: string) {
   const publicEnv = getPublicEnv();
   if (
     !publicEnv.supabaseUrl ||
@@ -20,8 +21,8 @@ async function requestUserPasswordResetViaLegacyBackend(email: string) {
       "Content-Type": "application/json",
       Authorization: `Bearer ${publicEnv.supabaseAnonKey}`,
       apikey: publicEnv.supabaseAnonKey,
-      "X-App-Url": publicEnv.appUrl,
-      "X-Client-Origin": publicEnv.appUrl,
+      "X-App-Url": publicBaseUrl || publicEnv.appUrl,
+      "X-Client-Origin": publicBaseUrl || publicEnv.appUrl,
     },
     body: JSON.stringify({ email }),
   });
@@ -41,9 +42,10 @@ async function requestUserPasswordResetViaLegacyBackend(email: string) {
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
   const email = String(body.email || "").trim();
+  const publicBaseUrl = resolveRequestOrigin(request);
 
   try {
-    const result = await requestUserPasswordReset(email);
+    const result = await requestUserPasswordReset(email, { publicBaseUrl });
     return NextResponse.json({ ok: true, ...result });
   } catch (error) {
     const message =
@@ -51,7 +53,10 @@ export async function POST(request: Request) {
 
     if (message.includes("Konfigurasi email verifikasi belum lengkap.") && email) {
       try {
-        const fallbackResult = await requestUserPasswordResetViaLegacyBackend(email);
+        const fallbackResult = await requestUserPasswordResetViaLegacyBackend(
+          email,
+          publicBaseUrl,
+        );
         return NextResponse.json({ ok: true, ...fallbackResult, provider: "legacy-backend" });
       } catch (fallbackError) {
         const fallbackMessage =

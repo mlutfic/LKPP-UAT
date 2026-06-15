@@ -57,7 +57,8 @@ npx vercel env pull .env.local --yes
 ```
 
 - File lokal seperti `.env.local`, `.next`, dan artifact dev lain sengaja tidak ikut upload ke Vercel lewat `.vercelignore`.
-- URL produksi aktif saat ini: `https://lkpp-antrean.vercel.app`
+- URL produksi aktif saat ini: `https://layananpublik-lkpp.id`
+- Untuk production, set `NEXT_PUBLIC_APP_URL` dan `NEXT_PUBLIC_SITE_URL` ke `https://layananpublik-lkpp.id`.
 - Turnstile aktif jika `NEXT_PUBLIC_TURNSTILE_SITE_KEY` dan `TURNSTILE_SECRET_KEY` terisi.
 
 ## Browser Automation

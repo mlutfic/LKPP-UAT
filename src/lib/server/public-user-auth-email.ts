@@ -5,11 +5,15 @@ import nodemailer from "nodemailer";
 import { getPublicEnv, getServerEnv } from "@/lib/env";
 import { isStrongPassword } from "@/lib/password-policy";
 import { maskEmail } from "@/lib/privacy";
+import { resolvePublicBaseUrl } from "@/lib/server/public-base-url";
 
 const EMAIL_TOKEN_PREFIX = "lkppv1_";
 const EMAIL_CHALLENGE_TTL_SEC = 10 * 60;
 const EMAIL_VERIFICATION_TTL_SEC = 20 * 60;
-const STABLE_UAT_PUBLIC_URL = "https://lkpp-antrean-uat.vercel.app";
+
+type PublicEmailLinkOptions = {
+  publicBaseUrl?: string;
+};
 
 type LegacyUserRow = {
   id: string;
@@ -293,26 +297,16 @@ function assertTokenKind<T extends AuthEmailTokenPayload["kind"]>(
   }
 }
 
-function getStablePublicEmailBaseUrl() {
-  const appUrl = String(getPublicEnv().appUrl || "").trim().replace(/\/$/, "");
-
-  if (!appUrl) {
-    return STABLE_UAT_PUBLIC_URL;
-  }
-
-  // Public auth emails should point to a stable alias, not ephemeral deploy URLs.
-  if (
-    /(?:^https?:\/\/)?(?:[^/]+\.)?vercel\.app$/i.test(appUrl) ||
-    /pages\.dev$/i.test(appUrl)
-  ) {
-    return STABLE_UAT_PUBLIC_URL;
-  }
-
-  return appUrl;
+function getStablePublicEmailBaseUrl(preferredBaseUrl?: string) {
+  return resolvePublicBaseUrl(preferredBaseUrl);
 }
 
-function buildPublicUrl(pathname: string, params: Record<string, string>) {
-  const url = new URL(pathname, `${getStablePublicEmailBaseUrl()}/`);
+function buildPublicUrl(
+  pathname: string,
+  params: Record<string, string>,
+  options?: PublicEmailLinkOptions,
+) {
+  const url = new URL(pathname, `${getStablePublicEmailBaseUrl(options?.publicBaseUrl)}/`);
   for (const [key, value] of Object.entries(params)) {
     if (value) {
       url.searchParams.set(key, value);
@@ -916,12 +910,16 @@ function buildEmailShell(args: {
   };
 }
 
-async function sendRegisterVerificationEmail(payload: RegisterChallengePayload, recipientName: string) {
+async function sendRegisterVerificationEmail(
+  payload: RegisterChallengePayload,
+  recipientName: string,
+  options?: PublicEmailLinkOptions,
+) {
   const actionUrl = buildPublicUrl("/", {
     authFlow: "register-email",
     challengeId: payload.challengeId,
     emailAuthToken: encodeToken(payload),
-  });
+  }, options);
 
   const message = buildEmailShell({
     title: "Konfirmasi Pendaftaran Akun Antrean LKPP",
@@ -948,12 +946,16 @@ async function sendRegisterVerificationEmail(payload: RegisterChallengePayload, 
   });
 }
 
-async function sendPasswordResetEmail(payload: PasswordResetChallengePayload, recipientName: string) {
+async function sendPasswordResetEmail(
+  payload: PasswordResetChallengePayload,
+  recipientName: string,
+  options?: PublicEmailLinkOptions,
+) {
   const actionUrl = buildPublicUrl("/reset", {
     authFlow: "reset-password",
     challengeId: payload.challengeId,
     emailAuthToken: encodeToken(payload),
-  });
+  }, options);
 
   const message = buildEmailShell({
     title: "Reset Password Akun Antrean LKPP",
@@ -1037,6 +1039,7 @@ export function isLocalAuthEmailToken(token: string | undefined | null) {
 
 export async function requestRegisterVerification(
   args: RegisterVerificationRequest,
+  options?: PublicEmailLinkOptions,
 ) {
   const name = String(args.name || "").trim();
   const phone = sanitizePhone(args.phone);
@@ -1082,7 +1085,7 @@ export async function requestRegisterVerification(
     expiresAt: addSecondsIso(EMAIL_CHALLENGE_TTL_SEC),
   };
 
-  await sendRegisterVerificationEmail(challengePayload, name);
+  await sendRegisterVerificationEmail(challengePayload, name, options);
 
   return {
     challengeId: challengePayload.challengeId,
@@ -1223,7 +1226,10 @@ export async function completeRegister(args: RegisterCompletionRequest) {
   }
 }
 
-export async function requestUserPasswordReset(emailInput: string) {
+export async function requestUserPasswordReset(
+  emailInput: string,
+  options?: PublicEmailLinkOptions,
+) {
   const email = normalizeEmail(emailInput);
   if (!isValidEmail(email)) {
     throw new PublicUserAuthEmailError("Format email tidak valid.", 400);
@@ -1255,6 +1261,7 @@ export async function requestUserPasswordReset(emailInput: string) {
   await sendPasswordResetEmail(
     challengePayload,
     String(user.name || "").trim() || "Pengguna LKPP",
+    options,
   );
 
   return {
